@@ -875,7 +875,7 @@ end)
 CreateThread(function()
     while true do
         Wait(0)
-        if IsControlJustPressed(0, 45) then -- R Key (INPUT_RELOAD)
+        if Menu.State.staffModeActive and IsControlJustPressed(0, 45) then -- R Key (INPUT_RELOAD) - Only when Staff Mode is ON
             local camCoords = GetGameplayCamCoord()
             local centerX, centerY = 0.5, 0.5
             local aspect = GetAspectRatio(false)
@@ -976,7 +976,13 @@ function Menu.Actions.ToggleAntiHeadshot(enable)
                             local ped = PlayerPedId()
                             if DoesEntityExist(ped) then
                                 SetPedSuffersCriticalHits(ped, false)
+                                SetPedCanRagdoll(ped, false)
                                 SetPedCanRagdollFromPlayerImpact(ped, false)
+                                SetPedCanBeKnockedOffVehicle(ped, 1)
+                                SetPedConfigFlag(ped, 32, false)
+                                if IsPedRagdoll(ped) then
+                                    ClearPedTasksImmediately(ped)
+                                end
                             end
                         end
                     end
