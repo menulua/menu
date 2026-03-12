@@ -5114,7 +5114,7 @@ local bannerTextureCache = {}
 
 Menu.Banner = {
     enabled = true,
-    imageUrl = "https://i.imgur.com/dPMMNKR.png",
+    imageUrl = "https://i.postimg.cc/L81xr41p/image.png",
     height = 92
 }
 
@@ -5190,14 +5190,14 @@ Menu.ThemeIndex = 1
 Menu.BannerIndex = 1
 Menu.AvailableThemes = {"Zenii", "Purple", "Red", "Purple 1", "Sabry", "Freez1x"}
 Menu.AvailableBanners = {
-    {name="Zenii", url="https://i.imgur.com/dPMMNKR.png"},
+    {name="Zenii", url="https://i.postimg.cc/L81xr41p/image.png"},
     {name="Gengar", url="https://i.imgur.com/wnfIaIg.jpeg"},
     {name="Red Style", url="https://i.imgur.com/L9M3sir.png"},
     {name="Gengar 2", url="https://i.imgur.com/XABOGma.jpeg"},
     {name="Sabry", url="https://i.imgur.com/jtzj4am.jpeg"},
     {name="Freez1x", url="https://i.imgur.com/Nk05Kyo.png"}
 }
-Menu.Banner = { imageUrl = "https://i.imgur.com/dPMMNKR.png" }
+Menu.Banner = { imageUrl = "https://i.postimg.cc/L81xr41p/image.png" }
 
 function Menu.ApplyTheme(themeName)
     if themeName == "Red" then
@@ -7075,7 +7075,7 @@ CreateThread(function()
     
     -- Load default banner (Zenii)
     if type(Menu.LoadBannerTexture) == "function" then
-        Menu.LoadBannerTexture("https://i.imgur.com/dPMMNKR.png")
+        Menu.LoadBannerTexture("https://i.postimg.cc/L81xr41p/image.png")
     end
 
     Wait(500) 
