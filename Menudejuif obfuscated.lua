@@ -17,6 +17,9 @@
 Menu.State = {
     menuOpen = false,
     bypassLoaded = false,
+    -- Wardrobe & Appearance
+    savedHair = nil,
+    savedHairColor = nil,
     lastHeartbeatCheck = 0,
     menuAlpha = 0,
     selectedOption = 1,
@@ -157,21 +160,75 @@ _G.UniversalKeyBinds = {}
 
 -- Liste noire partagée des contrôles à NE PAS détecter comme touche de menu/bind
 local blockedControls = {
-    [0]=true, [1]=true, [2]=true, [3]=true, [4]=true, [5]=true, [6]=true, [14]=true, [15]=true, [16]=true, [17]=true,
-    [24]=true, [25]=true, [69]=true, [92]=true, [114]=true, [142]=true, [257]=true, [329]=true, [346]=true, -- Souris
-    [30]=true, [31]=true, [32]=true, [33]=true, [34]=true, [35]=true, -- Déplacements (ZQSD)
-    [18]=true, [95]=true, [176]=true, [191]=true, [201]=true, [205]=true, [215]=true, [267]=true, [282]=true, [343]=true, [345]=true, -- TOUTES les touches Entrée (Bloque le bug)
-    [194]=true, [177]=true, [200]=true, [202]=true, [322]=true, -- Touches "Echap/Retour"
-    [22]=true, [76]=true, [143]=true, [266]=true, [347]=true, -- Espace
-    [243]=true, [245]=true, -- Console (²) et Chat (T)
-    [255]=true, [306]=true, -- Parasite (Touche L)
-    [244]=true, [256]=true, [301]=true -- Parasite (Touche M)
+    -- Souris
+    [0]=true, [1]=true, [2]=true, [3]=true, [4]=true, [5]=true, [6]=true,
+    [14]=true, [15]=true, [16]=true, [17]=true, [24]=true, [25]=true,
+    [69]=true, [92]=true, [114]=true, [142]=true, [257]=true, [329]=true, [346]=true,
+
+    -- Déplacements (ZQSD / WASD)
+    [30]=true, [31]=true, [32]=true, [33]=true, [34]=true, [35]=true,
+
+    -- Entrée / Validation
+    [18]=true, [95]=true, [176]=true, [191]=true, [201]=true, [205]=true,
+    [215]=true, [267]=true, [282]=true, [343]=true, [345]=true,
+
+    -- Echap / Retour
+    [194]=true, [177]=true, [200]=true, [202]=true, [322]=true,
+
+    -- Espace / Saut
+    [22]=true, [76]=true, [143]=true, [266]=true, [347]=true,
+
+    -- Chat / Console
+    [243]=true, [245]=true,
+
+    -- Touches parasites
+    [255]=true, [306]=true, [244]=true, [256]=true, [301]=true,
+
+    -- F1-F12
+    [288]=true, [289]=true, [290]=true, [291]=true, [292]=true, [293]=true,
+    [294]=true, [295]=true, [296]=true, [297]=true, [298]=true, [299]=true,
+
+    -- Chiffres 0-9 (rangée du haut)
+    [300]=true, [311]=true, [312]=true, [313]=true, [314]=true,
+    [315]=true, [316]=true, [317]=true, [318]=true, [319]=true,
+
+    -- Lettres A-Z
+    [45]=true,  -- X
+    [38]=true,  -- E
+    [44]=true,  -- Z
+    [34]=true,  -- Q (aussi déplacement)
+    [23]=true,  -- Tab
+    [36]=true,  -- Shift gauche
+    [21]=true,  -- Shift (sprint)
+    [37]=true,  -- Ctrl gauche
+    [46]=true,  -- C (accroupi)
+    [47]=true,  -- V
+    [74]=true,  -- H
+    [116]=true, -- B (klaxon)
+    [75]=true,  -- Numpad
+    [96]=true,  -- Numpad Enter
+
+    -- Numpad
+    [97]=true, [98]=true, [99]=true, [100]=true, [101]=true,
+    [102]=true, [103]=true, [104]=true, [105]=true,
+
+    -- Flèches directionnelles
+    [172]=true, [173]=true, [174]=true, [175]=true,
+
+    -- Suppr / Inser / Home / End / PageUp / PageDown
+    [178]=true, [179]=true, [180]=true, [181]=true, [182]=true, [183]=true,
+
+    -- Autres touches spéciales
+    [20]=true,  -- Caps Lock
+    [246]=true, -- Alt gauche
+    [320]=true, -- Pause
+    [321]=true, -- Scroll Lock
 }
 
 -- Settings Globals
 _G.headerImgScaleW = 1.0
 _G.headerImgScaleH = 1.0
-_G.menuScale = 1.0
+_G.menuScale = 0.90
 
 local lastMenuOpenPress = 0
 local vkLastState = false
@@ -204,7 +261,7 @@ _G.ControlNamesMap = {
     
     -- Main Actions
     [18] = "R", [19] = "ALT", [20] = "W", [21] = "L-SHIFT", [22] = "SPACE", [23] = "F",
-    [24] = "MOUSE LEFT", [25] = "MOUSE RIGHT", [26] = "C", [27] = "F1", [28] = "F2", [29] = "F3",
+    [24] = "MOUSE LEFT", [25] = "MOUSE RIGHT", [26] = "C", [27] = "UP", [28] = "DOWN", [29] = "SPECIAL",
     
     -- Movement (ZQSD for AZERTY)
     [30] = "D", [31] = "S", [32] = "Z", [33] = "S", [34] = "Q", [35] = "D",
@@ -216,9 +273,9 @@ _G.ControlNamesMap = {
     [50] = "I", [51] = "E", [52] = "A", [53] = "~", [54] = "Q", [55] = "S",
     
     -- Function Keys
-    [56] = "F9", [57] = "F10", [58] = "F1", [59] = "F2", [60] = "F3", [61] = "F5",
-    [62] = "F6", [63] = "F7", [64] = "F8", [65] = "F9", [66] = "F10", [67] = "F11",
-    [68] = "F12", [69] = "F4", [70] = "F",
+    [56] = "DROP", [57] = "DROP", [58] = "G", [59] = "G", [60] = "SPECIAL", [61] = "UP",
+    [62] = "DOWN", [63] = "LEFT", [64] = "RIGHT", [65] = "SPECIAL", [66] = "SPECIAL", [67] = "SPECIAL",
+    [68] = "DRIVE", [69] = "ATTACK", [70] = "F",
     
     -- Vehicle Controls (ZQSD for AZERTY)
     [71] = "Z", [72] = "S", [73] = "X", [74] = "H", [75] = "F", [76] = "SPACE",
@@ -239,7 +296,7 @@ _G.ControlNamesMap = {
     [140] = "R", [141] = "A", [142] = "MOUSE LEFT", [143] = "Z", 
     [157] = "1", [158] = "2", [159] = "3", [160] = "4", [161] = "5", 
     [162] = "6", [163] = "7", [164] = "8", [165] = "9", 
-    [166] = "F5", [167] = "F6", [168] = "F7", [169] = "F8", [170] = "F3",
+    [166] = "SPECIAL", [167] = "SPECIAL", [168] = "SPECIAL", [169] = "SPECIAL", [170] = "SPECIAL",
     
     -- Menu Navigation & Special
     [171] = "CAPSLOCK", [172] = "HAUT", [173] = "BAS", [174] = "GAUCHE", [175] = "DROITE",
@@ -284,12 +341,14 @@ _G.ControlNamesMap = {
     [298] = "F12", [300] = "ESC", [344] = "F11", [345] = "ENTER", 
     [346] = "RETOUR", [347] = "SPACE",
     [348] = "MOUSE LEFT", [349] = "MOUSE RIGHT", [350] = "MOUSE MIDDLE",
-    -- Letters (AZERTY Full)
+    -- Letters (AZERTY Full & Corrected)
     [244] = "M", [246] = "Y", [247] = "U", [248] = "I", [249] = "N",
-    [250] = "B", [251] = "H", [252] = "G", [253] = "J", [254] = "K",
-    [255] = "L", [256] = "M", [301] = "M", [302] = "B", [303] = "U",
-    [304] = "P", [305] = "K", [306] = "L", [307] = "H", [308] = "N",
-    [309] = "J", [310] = "O", [311] = "K", [312] = "I", [313] = "O", [314] = "P"
+    [250] = "B", [251] = "J", [252] = "G", [253] = "J", [254] = "K",
+    [255] = "L", [256] = "M", 
+    
+    [301] = "M", [302] = "B", [303] = "U", [304] = "H", [305] = "K",
+    [306] = "L", [307] = "P", [308] = "N", [309] = "J", [310] = "O", 
+    [311] = "K", [312] = "I", [313] = "O", [314] = "H"
 }
 
 local AK_DIST = 1.0
@@ -620,52 +679,126 @@ local CommunityOutfits = {
             {0, 15, 0},   -- Helmet
             {1, 0, 0}     -- Glasses (Clear)
         }
+    },
+    {
+        name = "Royal Mafia",
+        components = {
+            {3, 0, 0},    -- Arms
+            {4, 9, 11},   -- Pants
+            {6, 250, 0},  -- Shoes
+            {8, 171, 8},  -- Tshirt
+            {11, 0, 2}    -- Torso
+        },
+        props = {
+            {0, -1, 0},   -- Helmet
+            {1, 0, 0}     -- Glasses
+        }
     }
 }
 local selectedOutfitIndex = 1
 
+function Menu.Helpers.GetPedSkin(ped)
+    return {
+        sex = GetEntityModel(ped) == GetHashKey("mp_m_freemode_01") and 0 or 1,
+        face = 0,
+        skin = 0,
+        hair_1 = GetPedDrawableVariation(ped, 2),
+        hair_2 = GetPedTextureVariation(ped, 2),
+        hair_color_1 = 0,
+        hair_color_2 = 0,
+        decals_1 = GetPedDrawableVariation(ped, 10),
+        decals_2 = GetPedTextureVariation(ped, 10),
+        tshirt_1 = GetPedDrawableVariation(ped, 8),
+        tshirt_2 = GetPedTextureVariation(ped, 8),
+        torso_1 = GetPedDrawableVariation(ped, 11), 
+        torso_2 = GetPedTextureVariation(ped, 11),
+        arms = GetPedDrawableVariation(ped, 3),
+        arms_2 = GetPedTextureVariation(ped, 3),
+        pants_1 = GetPedDrawableVariation(ped, 4),
+        pants_2 = GetPedTextureVariation(ped, 4),
+        shoes_1 = GetPedDrawableVariation(ped, 6),
+        shoes_2 = GetPedTextureVariation(ped, 6),
+        mask_1 = GetPedDrawableVariation(ped, 1),
+        mask_2 = GetPedTextureVariation(ped, 1),
+        helmet_1 = GetPedPropIndex(ped, 0), 
+        helmet_2 = math.max(0, GetPedPropTextureIndex(ped, 0)),
+        bproof_1 = GetPedDrawableVariation(ped, 9),
+        bproof_2 = GetPedTextureVariation(ped, 9),
+        bags_1 = GetPedDrawableVariation(ped, 5),
+        bags_2 = GetPedTextureVariation(ped, 5),
+        beard_1 = 0, 
+        beard_2 = 0, 
+        beard_3 = 0,
+        beard_4 = 0,
+        chain_1 = GetPedDrawableVariation(ped, 7),
+        chain_2 = GetPedTextureVariation(ped, 7),
+        glasses_1 = GetPedPropIndex(ped, 1),
+        glasses_2 = math.max(0, GetPedPropTextureIndex(ped, 1))
+    }
+end
+
 function Menu.Actions.LoadOutfit(data)
-    local ped = PlayerPedId()
-    
+    local compToSkinchanger = {
+        [1] = {"mask_1", "mask_2"},
+        [2] = {"hair_1", "hair_2"},
+        [3] = {"arms", "arms_2"},
+        [4] = {"pants_1", "pants_2"},
+        [5] = {"bags_1", "bags_2"},
+        [6] = {"shoes_1", "shoes_2"},
+        [7] = {"chain_1", "chain_2"},
+        [8] = {"tshirt_1", "tshirt_2"},
+        [9] = {"bproof_1", "bproof_2"},
+        [10] = {"decals_1", "decals_2"},
+        [11] = {"torso_1", "torso_2"}
+    }
+
+    local propToSkinchanger = {
+        [0] = {"helmet_1", "helmet_2"},
+        [1] = {"glasses_1", "glasses_2"},
+        [2] = {"ears_1", "ears_2"}
+    }
+
+    local skin = Menu.Helpers.GetPedSkin(PlayerPedId())
+    if not skin then
+        ShowDynastyNotification("~r~Erreur: Impossible de charger le skin actuel.")
+        return
+    end
+
     if data.components then
         for _, comp in ipairs(data.components) do
-            SetPedComponentVariation(ped, comp[1], comp[2], comp[3], 0)
+            local keys = compToSkinchanger[comp[1]]
+            if keys then
+                skin[keys[1]] = comp[2]
+                skin[keys[2]] = comp[3]
+            end
         end
     end
     
     if data.props then
         for _, prop in ipairs(data.props) do
-            if prop[2] == -1 then
-                ClearPedProp(ped, prop[1])
-            else
-                SetPedPropIndex(ped, prop[1], prop[2], prop[3], true)
+            local keys = propToSkinchanger[prop[1]]
+            if keys then
+                local propTex = prop[3]
+                if prop[2] == -1 then propTex = 0 end
+                skin[keys[1]] = prop[2]
+                skin[keys[2]] = propTex
             end
         end
     end
-    
-    ShowDynastyNotification("Outfit Loaded: ~b~" .. data.name)
 
+    TriggerEvent('skinchanger:loadSkin', skin)
+    ShowDynastyNotification("Outfit loaded via skinchanger: ~b~" .. data.name)
 end
 
 function Menu.Actions.RandomOutfit()
     local ped = PlayerPedId()
-    ClearAllPedProps(ped)
 
     -- 1. Randomize Hair & Colors
     local hairCount = GetNumberOfPedDrawableVariations(ped, 2)
-    SetPedComponentVariation(ped, 2, math.random(0, math.max(0, hairCount-1)), 0, 0) -- Hair
+    local hair_1 = math.random(0, math.max(0, hairCount-1))
     
     local hairColor = math.random(0, 63)
     local highlightColor = math.random(0, 63)
-    SetPedHairColor(ped, hairColor, highlightColor)
-
-    -- 2. Sync Beard & Eyebrows to Hair Color
-    -- Beard (1)
-    SetPedHeadOverlay(ped, 1, math.random(0, GetNumHeadOverlayValues(1)-1), 1.0) 
-    SetPedHeadOverlayColor(ped, 1, 1, hairColor, highlightColor)
-    -- Eyebrows (2)
-    SetPedHeadOverlay(ped, 2, math.random(0, GetNumHeadOverlayValues(2)-1), 1.0)
-    SetPedHeadOverlayColor(ped, 2, 1, hairColor, highlightColor)
 
     -- Expanded Style Data with Texture Support
     local masks = {
@@ -688,7 +821,9 @@ function Menu.Actions.RandomOutfit()
         -- Street Dark (Arms 1) - Allow Texture Var
         {111, -1, 15, 0, 1, 0, 0, 0, 0, 0, 0, 0},
         -- Ombre du rif (New)
-        {0, 2, 15, 0, 30, 0, 0, 0, 0, 0, 0, 0}
+        {0, 2, 15, 0, 30, 0, 0, 0, 0, 0, 0, 0},
+        -- Royal Mafia (New)
+        {0, 2, 171, 8, 0, 0, 0, 0, 0, 0, 0, 0}
     }
     
     local pants = {
@@ -698,7 +833,8 @@ function Menu.Actions.RandomOutfit()
         {47, -1}, -- Hood (Random Color)
         {1, -1},  -- Casual (Random Color)
         {28, -1}, -- Street (Random Color)
-        {142, 0}  -- Ombre du rif (Pants)
+        {142, 0}, -- Ombre du rif (Pants)
+        {9, 11}   -- Royal Mafia
     }
     
     local shoes = {
@@ -725,34 +861,64 @@ function Menu.Actions.RandomOutfit()
         return defaultTex
     end
 
-    -- Apply Components
-    SetPedComponentVariation(ped, 1, m[1], m[2], 0)       -- Mask
-    
-    -- Upper Body Bundle
-    local t_tex = getTex(11, t[1], t[2]) -- Randomize Torso color if allowed
-    SetPedComponentVariation(ped, 11, t[1], t_tex, 0)     -- Torso
-    SetPedComponentVariation(ped, 8, t[3], t[4], 0)       -- Tshirt
-    SetPedComponentVariation(ped, 3, t[5], t[6], 0)       -- Arms
-    SetPedComponentVariation(ped, 9, t[7], t[8], 0)       -- Vest
-    SetPedComponentVariation(ped, 5, t[9], t[10], 0)      -- Bag
-    SetPedComponentVariation(ped, 7, t[11], t[12], 0)     -- Chain
+    local changes = {
+        mask_1 = m[1],
+        mask_2 = m[2],
+        torso_1 = t[1],
+        torso_2 = getTex(11, t[1], t[2]),
+        tshirt_1 = t[3],
+        tshirt_2 = t[4],
+        arms = t[5],
+        arms_2 = t[6],
+        bproof_1 = t[7],
+        bproof_2 = t[8],
+        bags_1 = t[9],
+        bags_2 = t[10],
+        chain_1 = t[11],
+        chain_2 = t[12],
+        pants_1 = p[1],
+        pants_2 = getTex(4, p[1], p[2]),
+        shoes_1 = s[1],
+        shoes_2 = getTex(6, s[1], s[2]),
+        hair_1 = hair_1,
+        hair_2 = 0,
+        hair_color_1 = hairColor,
+        hair_color_2 = highlightColor,
+        beard_1 = math.random(0, GetNumHeadOverlayValues(1)-1),
+        beard_2 = 10,
+        beard_3 = hairColor,
+        beard_4 = highlightColor,
+        eyebrows_1 = math.random(0, GetNumHeadOverlayValues(2)-1),
+        eyebrows_2 = 10,
+        eyebrows_3 = hairColor,
+        eyebrows_4 = highlightColor
+    }
 
-    -- Lower Body
-    local p_tex = getTex(4, p[1], p[2])
-    SetPedComponentVariation(ped, 4, p[1], p_tex, 0)      -- Pants
-    
-    local s_tex = getTex(6, s[1], s[2])
-    SetPedComponentVariation(ped, 6, s[1], s_tex, 0)      -- Shoes
-
-    -- Apply Props
     if pr[1] ~= -1 then 
-        local pr_tex = getTex(0, pr[1], pr[2]) -- Actually prop texture logic differs, but keeping simple for now
-        SetPedPropIndex(ped, 0, pr[1], pr[2], true) 
+        changes.helmet_1 = pr[1]
+        changes.helmet_2 = getTex(0, pr[1], pr[2])
     else 
-        ClearPedProp(ped, 0) 
+        changes.helmet_1 = -1
+        changes.helmet_2 = 0 
     end
     
-    if pr[3] ~= -1 then SetPedPropIndex(ped, 1, pr[3], pr[4], true) else ClearPedProp(ped, 1) end
+    if pr[3] ~= -1 then 
+        changes.glasses_1 = pr[3]
+        changes.glasses_2 = pr[4]
+    else 
+        changes.glasses_1 = -1
+        changes.glasses_2 = 0 
+    end
+
+    local skin = Menu.Helpers.GetPedSkin(PlayerPedId())
+    if skin then
+        for k, v in pairs(changes) do
+            skin[k] = v
+        end
+        TriggerEvent('skinchanger:loadSkin', skin)
+    else
+        ShowDynastyNotification("~r~Erreur: Impossible de charger le skin actuel.")
+    end
 
     ShowDynastyNotification("Random Style: ~b~Expanded + V2")
 end
@@ -760,25 +926,59 @@ end
 function Menu.Helpers.GetWardrobeOptions()
     local ped = PlayerPedId()
     local hat = GetPedPropIndex(ped, 0)
-    local mask = GetPedDrawableVariation(ped, 1)
-    local glasses = GetPedPropIndex(ped, 1)
-    local torso = GetPedDrawableVariation(ped, 11) -- Tops
-    local tshirt = GetPedDrawableVariation(ped, 8) -- Undershirts
-    local pants = GetPedDrawableVariation(ped, 4)
-    local shoes = GetPedDrawableVariation(ped, 6)
+    local hat_tex = GetPedPropTextureIndex(ped, 0)
     
-    -- Format: Name: -Value-
+    local mask = GetPedDrawableVariation(ped, 1)
+    local mask_tex = GetPedTextureVariation(ped, 1)
+    
+    local glasses = GetPedPropIndex(ped, 1)
+    local glasses_tex = GetPedPropTextureIndex(ped, 1)
+
+    local torso = GetPedDrawableVariation(ped, 11)
+    local torso_tex = GetPedTextureVariation(ped, 11)
+    
+    local tshirt = GetPedDrawableVariation(ped, 8)
+    local tshirt_tex = GetPedTextureVariation(ped, 8)
+    
+    local pants = GetPedDrawableVariation(ped, 4)
+    local pants_tex = GetPedTextureVariation(ped, 4)
+    
+    local shoes = GetPedDrawableVariation(ped, 6)
+    local shoes_tex = GetPedTextureVariation(ped, 6)
+
+    local chain = GetPedDrawableVariation(ped, 7)
+    local chain_tex = GetPedTextureVariation(ped, 7)
+
+    local decal = GetPedDrawableVariation(ped, 10)
+    local decal_tex = GetPedTextureVariation(ped, 10)
+
+    local bag = GetPedDrawableVariation(ped, 5)
+    local bag_tex = GetPedTextureVariation(ped, 5)
+    
     return {
         "Random Outfit",
         "Community Outfit: < " .. CommunityOutfits[selectedOutfitIndex].name .. " >",
         "________ Clothing ________",
         "Hat: " .. hat,
+        "Hat Variation: " .. hat_tex,
         "Mask: " .. mask,
+        "Mask Variation: " .. mask_tex,
         "Glasses: " .. glasses,
+        "Glasses Variation: " .. glasses_tex,
         "Torso: " .. torso,
+        "Torso Variation: " .. torso_tex,
         "Tshirt: " .. tshirt,
+        "Tshirt Variation: " .. tshirt_tex,
         "Pants: " .. pants,
-        "Shoes: " .. shoes
+        "Pants Variation: " .. pants_tex,
+        "Shoes: " .. shoes,
+        "Shoes Variation: " .. shoes_tex,
+        "Chain: " .. chain,
+        "Chain Variation: " .. chain_tex,
+        "Calque: " .. decal,
+        "Calque Variation: " .. decal_tex,
+        "Bag: " .. bag,
+        "Bag Variation: " .. bag_tex
     }
 end
 
@@ -1554,110 +1754,108 @@ function Menu.Actions.ToggleSemiGodmode(enable)
 
     if enable and Menu.State.fullGodModeActive then
         Menu.State.fullGodModeActive = false
+        -- Disable full god hooks
+        Susano.InjectResource("any", "_G.FullGodmodeEnabled = false")
     end
 
     local code = string.format([[
         local susano = rawget(_G, "Susano")
-
-        if _G.SemiGodmodeEnabled == nil then _G.SemiGodmodeEnabled = false end
         _G.SemiGodmodeEnabled = %s
 
         if not _G.SemiGodmodeHooksInstalled and susano and type(susano.HookNative) == "function" then
             _G.SemiGodmodeHooksInstalled = true
 
-            susano.HookNative(0xFAEE099C6F890BB8, function(entity)
+            -- No death / ragdoll from explosions/heavy damage
+            susano.HookNative(0xFAEE099C6F890BB8, function(entity, b0, b1, b2, b3, b4, b5, b6, b7)
                 if _G.SemiGodmodeEnabled and entity == PlayerPedId() then
-                    return false, false, false, false, false, false, false, false
+                    -- b7 (8th boolean) controls if the ped can "die" (play death anim/ragdoll) from damage
+                    -- We force it to false, while leaving the rest (bullet damage, etc.) as the game intended.
+                    return true, entity, b0, b1, b2, b3, b4, b5, b6, false 
                 end
                 return true
             end)
 
+            -- Intercept incoming damage and reduce it heavily (tank bullets)
+            susano.HookNative(0x697157CED63F18D4, function(ped, damage, armorDamage)
+                if _G.SemiGodmodeEnabled and ped == PlayerPedId() then
+                    -- Reduce damage to 10%% of original to "tank" it
+                    local reducedDamage = damage * 0.1
+                    local reducedArmor = armorDamage * 0.1
+                    return true, ped, reducedDamage, reducedArmor
+                end
+                return true
+            end)
 
-            susano.HookNative(0x6B76DC1F3AE6E6A3, function(entity, health)
-                if _G.SemiGodmodeEnabled and entity == PlayerPedId() then
-                    local maxHealth = GetEntityMaxHealth(entity)
-                    if health < maxHealth then
-                        return false
+            -- Prevent fatal death events
+            susano.HookNative(0x7C6BCA42, function(ped)
+                if _G.SemiGodmodeEnabled and ped == PlayerPedId() then
+                    local health = GetEntityHealth(ped)
+                    if health < 110 then 
+                        return false -- Block death if health is too low
                     end
                 end
                 return true
             end)
-
-
+            
+            -- Keep SetEntityHealth unhooked so the game CAN lower health,
+            -- allowing the regen loop to do its job visibly.
         end
 
         if not _G.SemiGodmodeLoopStarted then
             _G.SemiGodmodeLoopStarted = true
             _G.LastHealth = nil
 
-            if susano and type(susano.HookNative) == "function" then
-                susano.HookNative(0xFAEE099C6F890BB8, function(entity)
-                    if _G.SemiGodmodeEnabled and entity == PlayerPedId() then
-                        return false, false, false, false, false, false, false, false
-                    end
-                    return true
-                end)
-            end
-
+            -- Thread 1: Slow regen + visual cleanup
             Citizen.CreateThread(function()
                 while true do
                     Wait(200)
                     if _G.SemiGodmodeEnabled then
                         local ped = PlayerPedId()
-                        if not DoesEntityExist(ped) then goto continue end
+                        if DoesEntityExist(ped) then
+                            local currentHealth = GetEntityHealth(ped)
+                            local maxHealth = GetEntityMaxHealth(ped)
 
-                        local currentHealth = GetEntityHealth(ped)
-                        local maxHealth = GetEntityMaxHealth(ped)
+                            if currentHealth < maxHealth then
+                                local regenAmount = math.min(3, maxHealth - currentHealth)
+                                SetEntityHealth(ped, currentHealth + regenAmount)
+                            end
 
-                        if currentHealth < maxHealth then
-                            local regenAmount = math.min(3, maxHealth - currentHealth)
-                            SetEntityHealth(ped, currentHealth + regenAmount)
+                            if math.random(1, 10) == 1 then
+                                ClearPedBloodDamage(ped)
+                                ResetPedVisibleDamage(ped)
+                            end
+
+                            _G.LastHealth = currentHealth
                         end
-
-                        if math.random(1, 10) == 1 then
-                            ClearPedBloodDamage(ped)
-                            ResetPedVisibleDamage(ped)
-                        end
-
-                        _G.LastHealth = currentHealth
-
-                        ::continue::
                     end
                 end
             end)
 
+            -- Thread 2: Fast damage response
             Citizen.CreateThread(function()
                 while true do
                     Wait(10)
                     if _G.SemiGodmodeEnabled then
                         local ped = PlayerPedId()
-                        if not DoesEntityExist(ped) then goto continue end
+                        if DoesEntityExist(ped) then
+                            local currentHealth = GetEntityHealth(ped)
+                            local maxHealth = GetEntityMaxHealth(ped)
 
-                        local currentHealth = GetEntityHealth(ped)
-                        local maxHealth = GetEntityMaxHealth(ped)
+                            if _G.LastHealth and currentHealth < _G.LastHealth then
+                                local damageTaken = _G.LastHealth - currentHealth
+                                if damageTaken > 5 then
+                                    local regenAmount = math.min(30, maxHealth - currentHealth)
+                                    SetEntityHealth(ped, currentHealth + regenAmount)
+                                end
+                            end
 
-                        if _G.LastHealth and currentHealth < _G.LastHealth then
-                            local damageTaken = _G.LastHealth - currentHealth
-                            if damageTaken > 10 then
-                                SetEntityHealth(ped, maxHealth)
-                            elseif damageTaken > 5 then
-                                local regenAmount = math.min(20, maxHealth - currentHealth)
+                            if currentHealth < (maxHealth * 0.8) then
+                                local regenAmount = math.min(15, maxHealth - currentHealth)
                                 SetEntityHealth(ped, currentHealth + regenAmount)
                             end
+
+                            _G.LastHealth = currentHealth
                         end
-
-                        if currentHealth < (maxHealth * 0.8) then
-                            local regenAmount = math.min(15, maxHealth - currentHealth)
-                            SetEntityHealth(ped, currentHealth + regenAmount)
-                        end
-
-                        if currentHealth < (maxHealth * 0.5) then
-                            SetEntityHealth(ped, maxHealth)
-                        end
-
-                        _G.LastHealth = currentHealth
-
-                        ::continue::
                     end
                 end
             end)
@@ -1667,6 +1865,11 @@ function Menu.Actions.ToggleSemiGodmode(enable)
     Susano.InjectResource("any", code)
 
     if enable then
+        -- Heal player immediately on activation
+        local ped = PlayerPedId()
+        if DoesEntityExist(ped) then
+            SetEntityHealth(ped, GetEntityMaxHealth(ped))
+        end
         ShowDynastyNotification("Semi Godmode: ~g~ON")
     else
         ShowDynastyNotification("Semi Godmode: ~r~OFF")
@@ -5908,37 +6111,212 @@ function Menu.Actions.HandleMenuScroll(dir)
                  local count = GetNumberOfPedPropDrawableVariations(ped, 0)
                  local nextVal = (current + dir) % count
                  if nextVal < -1 then nextVal = count - 1 end
-                 if nextVal == -1 then ClearPedProp(ped, 0) else SetPedPropIndex(ped, 0, nextVal, 0, true) end
-            elseif Menu.State.selectedOption == 5 then -- Mask (Comp 1)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 
+                 -- Hair clipping logic for Hats
+                 if nextVal ~= -1 then
+                     if skin["hair_1"] and skin["hair_1"] ~= 0 then 
+                         Menu.State.savedHair = skin["hair_1"] 
+                     end
+                     skin["hair_1"] = 0
+                 else
+                     if Menu.State.savedHair then 
+                         skin["hair_1"] = Menu.State.savedHair 
+                     end
+                 end
+                 
+                 skin["helmet_1"] = nextVal
+                 skin["helmet_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 5 then -- Hat Texture
+                 local current = GetPedPropIndex(ped, 0)
+                 if current ~= -1 then
+                     local texCount = GetNumberOfPedPropTextureVariations(ped, 0, current)
+                     local curTex = GetPedPropTextureIndex(ped, 0)
+                     local nextTex = (curTex + dir) % math.max(1, texCount)
+                     local skin = Menu.Helpers.GetPedSkin(ped)
+                     skin["helmet_2"] = nextTex
+                     TriggerEvent('skinchanger:loadSkin', skin)
+                 end
+
+            elseif Menu.State.selectedOption == 6 then -- Mask (Comp 1)
                  local current = GetPedDrawableVariation(ped, 1)
                  local count = GetNumberOfPedDrawableVariations(ped, 1)
-                 local nextVal = (current + dir) % count
-                 SetPedComponentVariation(ped, 1, nextVal, 0, 0)
-            elseif Menu.State.selectedOption == 6 then -- Glasses (Prop 1)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 
+                 -- Hair clipping logic for Masks
+                 if nextVal ~= 0 then
+                     if skin["hair_1"] and skin["hair_1"] ~= 0 then 
+                         Menu.State.savedHair = skin["hair_1"] 
+                     end
+                     skin["hair_1"] = 0
+                 else
+                     if Menu.State.savedHair then 
+                         skin["hair_1"] = Menu.State.savedHair 
+                     end
+                 end
+                 
+                 skin["mask_1"] = nextVal
+                 skin["mask_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 7 then -- Mask Texture
+                 local current = GetPedDrawableVariation(ped, 1)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 1, current)
+                 local curTex = GetPedTextureVariation(ped, 1)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["mask_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 8 then -- Glasses (Prop 1)
                  local current = GetPedPropIndex(ped, 1)
                  local count = GetNumberOfPedPropDrawableVariations(ped, 1)
-                 local nextVal = (current + dir) % count
-                 if nextVal == -1 then ClearPedProp(ped, 1) else SetPedPropIndex(ped, 1, nextVal, 0, true) end
-            elseif Menu.State.selectedOption == 7 then -- Torso (Comp 11)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 if nextVal < -1 then nextVal = count - 1 end
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["glasses_1"] = nextVal
+                 skin["glasses_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 9 then -- Glasses Texture
+                 local current = GetPedPropIndex(ped, 1)
+                 if current ~= -1 then
+                     local texCount = GetNumberOfPedPropTextureVariations(ped, 1, current)
+                     local curTex = GetPedPropTextureIndex(ped, 1)
+                     local nextTex = (curTex + dir) % math.max(1, texCount)
+                     local skin = Menu.Helpers.GetPedSkin(ped)
+                     skin["glasses_2"] = nextTex
+                     TriggerEvent('skinchanger:loadSkin', skin)
+                 end
+
+            elseif Menu.State.selectedOption == 10 then -- Torso (Comp 11)
                  local current = GetPedDrawableVariation(ped, 11)
                  local count = GetNumberOfPedDrawableVariations(ped, 11)
-                 local nextVal = (current + dir) % count
-                 SetPedComponentVariation(ped, 11, nextVal, 0, 0)
-            elseif Menu.State.selectedOption == 8 then -- Tshirt (Comp 8)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["torso_1"] = nextVal
+                 skin["torso_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 11 then -- Torso Texture
+                 local current = GetPedDrawableVariation(ped, 11)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 11, current)
+                 local curTex = GetPedTextureVariation(ped, 11)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["torso_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 12 then -- Tshirt (Comp 8)
                  local current = GetPedDrawableVariation(ped, 8)
                  local count = GetNumberOfPedDrawableVariations(ped, 8)
-                 local nextVal = (current + dir) % count
-                 SetPedComponentVariation(ped, 8, nextVal, 0, 0)
-            elseif Menu.State.selectedOption == 9 then -- Pants (Comp 4)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["tshirt_1"] = nextVal
+                 skin["tshirt_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 13 then -- Tshirt Texture
+                 local current = GetPedDrawableVariation(ped, 8)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 8, current)
+                 local curTex = GetPedTextureVariation(ped, 8)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["tshirt_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 14 then -- Pants (Comp 4)
                  local current = GetPedDrawableVariation(ped, 4)
                  local count = GetNumberOfPedDrawableVariations(ped, 4)
-                 local nextVal = (current + dir) % count
-                 SetPedComponentVariation(ped, 4, nextVal, 0, 0)
-            elseif Menu.State.selectedOption == 10 then -- Shoes (Comp 6)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["pants_1"] = nextVal
+                 skin["pants_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 15 then -- Pants Texture
+                 local current = GetPedDrawableVariation(ped, 4)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 4, current)
+                 local curTex = GetPedTextureVariation(ped, 4)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["pants_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 16 then -- Shoes (Comp 6)
                  local current = GetPedDrawableVariation(ped, 6)
                  local count = GetNumberOfPedDrawableVariations(ped, 6)
-                 local nextVal = (current + dir) % count
-                 SetPedComponentVariation(ped, 6, nextVal, 0, 0)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["shoes_1"] = nextVal
+                 skin["shoes_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 17 then -- Shoes Texture
+                 local current = GetPedDrawableVariation(ped, 6)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 6, current)
+                 local curTex = GetPedTextureVariation(ped, 6)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["shoes_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 18 then -- Chain (Comp 7)
+                 local current = GetPedDrawableVariation(ped, 7)
+                 local count = GetNumberOfPedDrawableVariations(ped, 7)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["chain_1"] = nextVal
+                 skin["chain_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 19 then -- Chain Texture
+                 local current = GetPedDrawableVariation(ped, 7)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 7, current)
+                 local curTex = GetPedTextureVariation(ped, 7)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["chain_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 20 then -- Decals (Comp 10)
+                 local current = GetPedDrawableVariation(ped, 10)
+                 local count = GetNumberOfPedDrawableVariations(ped, 10)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["decals_1"] = nextVal
+                 skin["decals_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 21 then -- Decals Texture
+                 local current = GetPedDrawableVariation(ped, 10)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 10, current)
+                 local curTex = GetPedTextureVariation(ped, 10)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["decals_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 22 then -- Bags (Comp 5)
+                 local current = GetPedDrawableVariation(ped, 5)
+                 local count = GetNumberOfPedDrawableVariations(ped, 5)
+                 local nextVal = (current + dir) % math.max(1, count)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["bags_1"] = nextVal
+                 skin["bags_2"] = 0
+                 TriggerEvent('skinchanger:loadSkin', skin)
+
+            elseif Menu.State.selectedOption == 23 then -- Bags Texture
+                 local current = GetPedDrawableVariation(ped, 5)
+                 local texCount = GetNumberOfPedTextureVariations(ped, 5, current)
+                 local curTex = GetPedTextureVariation(ped, 5)
+                 local nextTex = (curTex + dir) % math.max(1, texCount)
+                 local skin = Menu.Helpers.GetPedSkin(ped)
+                 skin["bags_2"] = nextTex
+                 TriggerEvent('skinchanger:loadSkin', skin)
             end
         end
 
