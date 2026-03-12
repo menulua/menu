@@ -1485,7 +1485,6 @@ function Menu.Actions.ToggleFullGodmode(enable)
     local code = string.format([[
         local susano = rawget(_G, "Susano")
 
-        if _G.FullGodmodeEnabled == nil then _G.FullGodmodeEnabled = false end
         _G.FullGodmodeEnabled = %s
 
         if not _G.FullGodmodeHooksInstalled and susano and type(susano.HookNative) == "function" then
@@ -1498,31 +1497,37 @@ function Menu.Actions.ToggleFullGodmode(enable)
                 return true
             end)
 
-
-            susano.HookNative(0x6B76DC1F3AE6E6A3, function(entity, health)
-                if _G.FullGodmodeEnabled and entity == PlayerPedId() then
-                    local maxHealth = GetEntityMaxHealth(entity)
-                    if health < maxHealth then
-                        return false
-                    end
+            susano.HookNative(0x697157CED63F18D4, function(ped, damage, armorDamage)
+                if _G.FullGodmodeEnabled and ped == PlayerPedId() then
+                    return false
                 end
                 return true
             end)
 
+            susano.HookNative(0x6B76DC1F3AE6E6A3, function(entity, health)
+                if _G.FullGodmodeEnabled and entity == PlayerPedId() then
+                    return false
+                end
+                return true
+            end)
 
+            susano.HookNative(0x7C6BCA42, function(ped)
+                if _G.FullGodmodeEnabled and ped == PlayerPedId() then
+                    return false
+                end
+                return true
+            end)
         end
 
         if not _G.FullGodmodeLoopStarted then
             _G.FullGodmodeLoopStarted = true
-
             Citizen.CreateThread(function()
                 while true do
                     Wait(0)
                     if _G.FullGodmodeEnabled then
                         local ped = PlayerPedId()
                         if DoesEntityExist(ped) then
-                            local maxHealth = GetEntityMaxHealth(ped)
-                            SetEntityHealth(ped, maxHealth)
+                            SetEntityHealth(ped, GetEntityMaxHealth(ped))
                         end
                     end
                 end
