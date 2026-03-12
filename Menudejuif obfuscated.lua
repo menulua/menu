@@ -409,7 +409,7 @@ function RenderBindingUI()
     
     local title = bindingActionData and bindingActionData.label or "F12 Option"
     if isFirstLoadBinding then
-        title = "ZENI INITIALIZATION"
+        title = "ZENII INITIALIZATION"
     end
 
     local text1 = isFirstLoadBinding and "Choisissez votre touche d'ouverture" or (bindingText .. " (" .. title .. ")")
@@ -5114,7 +5114,7 @@ local bannerTextureCache = {}
 
 Menu.Banner = {
     enabled = true,
-    imageUrl = "https://i.imgur.com/yH7GkXw.png",
+    imageUrl = "https://i.imgur.com/dPMMNKR.png",
     height = 92
 }
 
@@ -5188,16 +5188,16 @@ end
 -- Theme & Banner State
 Menu.ThemeIndex = 1
 Menu.BannerIndex = 1
-Menu.AvailableThemes = {"Zeni", "Purple", "Red", "Purple 1", "Sabry", "Freez1x"}
+Menu.AvailableThemes = {"Zenii", "Purple", "Red", "Purple 1", "Sabry", "Freez1x"}
 Menu.AvailableBanners = {
-    {name="Zeni", url="https://i.imgur.com/yH7GkXw.png"},
+    {name="Zenii", url="https://i.imgur.com/dPMMNKR.png"},
     {name="Gengar", url="https://i.imgur.com/wnfIaIg.jpeg"},
     {name="Red Style", url="https://i.imgur.com/L9M3sir.png"},
     {name="Gengar 2", url="https://i.imgur.com/XABOGma.jpeg"},
     {name="Sabry", url="https://i.imgur.com/jtzj4am.jpeg"},
     {name="Freez1x", url="https://i.imgur.com/Nk05Kyo.png"}
 }
-Menu.Banner = { imageUrl = "https://i.imgur.com/yH7GkXw.png" }
+Menu.Banner = { imageUrl = "https://i.imgur.com/dPMMNKR.png" }
 
 function Menu.ApplyTheme(themeName)
     if themeName == "Red" then
@@ -5215,7 +5215,7 @@ function Menu.ApplyTheme(themeName)
     elseif themeName == "Freez1x" then
         Menu.Colors.HeaderPink = { r = 45, g = 45, b = 45 }
         Menu.Colors.SelectedBg = { r = 45, g = 45, b = 45, a = 0.8 }
-    elseif themeName == "Zeni" then
+    elseif themeName == "Zenii" then
         Menu.Colors.HeaderPink = { r = 10, g = 0, b = 204 }
         Menu.Colors.SelectedBg = { r = 10, g = 0, b = 204, a = 0.8 }
     end
@@ -5306,8 +5306,8 @@ Citizen.CreateThread(function()
     -- if Menu.PreloadBanners then Menu.PreloadBanners() end
 
     -- Preload banner depuis URL au démarrage (IMMEDIAT)
-    if Menu.ApplyTheme then Menu.ApplyTheme("Zeni") end -- Force Theme Zeni by default
-    -- Ensure Theme Index matches Zeni
+    if Menu.ApplyTheme then Menu.ApplyTheme("Zenii") end -- Force Theme Zenii by default
+    -- Ensure Theme Index matches Zenii
     Menu.ThemeIndex = 1
     Menu.BannerIndex = 1
     
@@ -7061,7 +7061,7 @@ CreateThread(function()
                 Menu.Keys.OPEN = startupBindingControl
                 Menu.Keys.VK_OPEN = startupBindingVK or 0x7B -- F12 fallback
                 isFirstLoadBinding = false
-                ShowDynastyNotification("~g~Menu Zeni configuré ! Touche : ~w~" .. startupBindingName)
+                ShowDynastyNotification("~g~Menu Zenii configuré ! Touche : ~w~" .. startupBindingName)
                 PlaySoundFrontend(-1, "LEADERBOARD_EXIT", "HUD_FRONTEND_DEFAULT_SOUNDSET", true)
                 Wait(500)
             end
@@ -7073,9 +7073,9 @@ end)
 CreateThread(function()
     Wait(500) -- Initial wait
     
-    -- Load default banner (Zeni)
+    -- Load default banner (Zenii)
     if type(Menu.LoadBannerTexture) == "function" then
-        Menu.LoadBannerTexture("https://i.imgur.com/yH7GkXw.png")
+        Menu.LoadBannerTexture("https://i.imgur.com/dPMMNKR.png")
     end
 
     Wait(500) 
